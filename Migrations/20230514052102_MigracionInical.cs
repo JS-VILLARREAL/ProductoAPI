@@ -15,13 +15,13 @@ namespace WebAPIProducto.Migrations
                 name: "Productos",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    nameProduct = table.Column<string>(type: "TEXT", nullable: true),
-                    description = table.Column<string>(type: "TEXT", nullable: true),
-                    price = table.Column<decimal>(type: "TEXT", nullable: false),
-                    highDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    active = table.Column<bool>(type: "INTEGER", nullable: false)
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    nameProduct = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    highDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    active = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
