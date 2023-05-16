@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +19,13 @@ namespace WebAPIProducto.Controllers
         //Logger Inyección de Dependencia
         private readonly ILogger<ProductosController> _logger;
         private readonly DataContext _db;
+        private readonly IMapper _mapper;
 
-        public ProductosController(ILogger<ProductosController> logger, DataContext db)
+        public ProductosController(ILogger<ProductosController> logger, DataContext db, IMapper mapper)
         {
             _logger = logger;
             _db = db;
+            _mapper = mapper;
         }
         //Entity Framework Core Modelos de Base de Datos
         //Para trabajar con una base de datos, es necesario trabajar Entity Framework Core
@@ -35,7 +38,11 @@ namespace WebAPIProducto.Controllers
         public async Task<ActionResult<IEnumerable<ProductoDto>>> GetProducto()
         {
             _logger.LogInformation("Obtener las villas");
-            return Ok(await _db.Productos.ToListAsync());
+            //Mapper realiza una consulta a la base de datos para obtener una lista de productos
+            //y luego los convierte en objetos de tipo ProductoDto antes de devolverlos como respuesta HTTP en formato JSON.
+            IEnumerable<Producto> productList = await _db.Productos.ToListAsync();
+
+            return Ok(_mapper.Map<IEnumerable<ProductoDto>>(productList));
         }
 
         //Endpoint de consultar por id
@@ -58,7 +65,7 @@ namespace WebAPIProducto.Controllers
                 return NotFound();
             }
 
-            return Ok(producto);
+            return Ok(_mapper.Map<ProductoDto>(producto));
         }
 
         //Endpoint de crear
@@ -66,7 +73,7 @@ namespace WebAPIProducto.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ProductoDto>> PostProducto(ProductoCreate producto)
+        public async Task<ActionResult<ProductoDto>> PostProducto(ProductoCreate productPost)
         {
             //Validar que si hay fallo en modelo
             if (!ModelState.IsValid)
@@ -74,25 +81,29 @@ namespace WebAPIProducto.Controllers
                 return BadRequest();
             }
             //Validaciones Personalizadas
-            if (await _db.Productos.FirstOrDefaultAsync(v => v.nameProduct.ToLower() == producto.nameProduct.ToLower()) != null)
+            if (await _db.Productos.FirstOrDefaultAsync(v => v.nameProduct.ToLower() == productPost.nameProduct.ToLower()) != null)
             {
                 ModelState.AddModelError("NombreExiste", "El nombre ya existe");
                 return BadRequest(ModelState);
             }
 
-            if (producto == null)
+            if (productPost == null)
             {
-                return BadRequest();
+                return BadRequest(productPost);
             }
-            //Crear nuevo modelo
-            Producto modelo = new()
-            {
-                nameProduct = producto.nameProduct,
-                description = producto.description,
-                price = producto.price,
-                active = producto.active
-            };
 
+            //Antes se utilizo esto
+            //Crear nuevo modelo
+            // Producto modelo = new()
+            // {
+            //     nameProduct = producto.nameProduct,
+            //     description = producto.description,
+            //     price = producto.price,
+            //     active = producto.active
+            // };
+
+            //Mapper
+            Producto modelo = _mapper.Map<Producto>(productPost);
 
             await _db.AddAsync(modelo);
             await _db.SaveChangesAsync();
@@ -104,21 +115,24 @@ namespace WebAPIProducto.Controllers
         [HttpPut("{id:int}", Name = "PutProducto")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult> PutProducto(int id, [FromBody] ProductoUpdate producto)
+        public async Task<ActionResult> PutProducto(int id, [FromBody] ProductoUpdate productPut)
         {
-            if (producto == null || id != producto.id)
+            if (productPut == null || id != productPut.id)
             {
                 return BadRequest();
             }
 
-            Producto modelo = new()
-            {
-                id = producto.id,
-                nameProduct = producto.nameProduct,
-                description = producto.description,
-                price = producto.price,
-                active = producto.active
-            };
+            // Producto modelo = new()
+            // {
+            //     id = producto.id,
+            //     nameProduct = producto.nameProduct,
+            //     description = producto.description,
+            //     price = producto.price,
+            //     active = producto.active
+            // };
+
+            //Mapper
+            Producto modelo = _mapper.Map<Producto>(productPut);
 
             //se le informa que el objeto producto ha sido modificado
             _db.Entry(modelo).State = EntityState.Modified;
@@ -142,14 +156,15 @@ namespace WebAPIProducto.Controllers
             //var villa = VillaStoreClass.villaList.FirstOrDefault(v => v.Id == id);
             var product = await _db.Productos.AsNoTracking().FirstOrDefaultAsync(v => v.id == id);
 
-            ProductoUpdate modelo = new()
-            {
-                id = product.id,
-                nameProduct = product.nameProduct,
-                description = product.description,
-                price = product.price,
-                active = product.active
-            };
+            ProductoUpdate modelo = _mapper.Map<ProductoUpdate>(product);
+            // ProductoUpdate modelo = new()
+            // {
+            //     id = product.id,
+            //     nameProduct = product.nameProduct,
+            //     description = product.description,
+            //     price = product.price,
+            //     active = product.active
+            // };
 
             if (product == null) return BadRequest();
 
@@ -160,14 +175,17 @@ namespace WebAPIProducto.Controllers
                 return BadRequest(ModelState);
             }
 
-            Producto model = new()
-            {
-                id = modelo.id,
-                nameProduct = modelo.nameProduct,
-                description = modelo.description,
-                price = modelo.price,
-                active = modelo.active
-            };
+            Producto model = _mapper.Map<Producto>(modelo);
+
+            
+            // Producto model = new()
+            // {
+            //     id = modelo.id,
+            //     nameProduct = modelo.nameProduct,
+            //     description = modelo.description,
+            //     price = modelo.price,
+            //     active = modelo.active
+            // };
 
             //se le informa que el objeto producto ha sido modificado
             _db.Entry(model).State = EntityState.Modified;

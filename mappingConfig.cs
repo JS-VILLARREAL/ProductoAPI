@@ -13,6 +13,10 @@ namespace WebAPIProducto
         public mappingConfig()
         {
             CreateMap<Producto, ProductoDto>();
+            CreateMap<ProductoDto, Producto>();
+
+            CreateMap<Producto, ProductoCreate>().ReverseMap();
+            CreateMap<Producto, ProductoUpdate>().ReverseMap();
         }
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WebAPIProducto;
 using WebAPIProducto.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,10 @@ builder.Services.AddDbContext<DataContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+//Agregar un nuevo servicio
+builder.Services.AddAutoMapper(typeof(mappingConfig));
+
 
 var app = builder.Build();
 
