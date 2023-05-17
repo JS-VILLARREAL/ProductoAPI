@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace WebAPIProducto.Models.Dto
 {
+    /* La clase define propiedades para crear un producto, incluido su nombre, descripción, precio y
+    estado activo. */
     public class ProductoCreate
     {
         [Required]

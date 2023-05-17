@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using WebAPIProducto.Data;
 using WebAPIProducto.Models;
 using WebAPIProducto.Models.Dto;
+using WebAPIProducto.Repository.IRepository;
 
 namespace WebAPIProducto.Controllers
 {
@@ -18,13 +19,19 @@ namespace WebAPIProducto.Controllers
     {
         //Logger Inyección de Dependencia
         private readonly ILogger<ProductosController> _logger;
-        private readonly DataContext _db;
+
+        // private readonly DataContext _db;
+
+        /* Declarar un campo privado de solo lectura de tipo `IProductRepository` llamado
+        `_productRepo`. Se usa para acceder a métodos y propiedades definidos en la interfaz `IProductRepository`,
+        que se implementa mediante una clase concreta en otra parte del código. */
+        private readonly IProductRepository _productRepo;
         private readonly IMapper _mapper;
 
-        public ProductosController(ILogger<ProductosController> logger, DataContext db, IMapper mapper)
+        public ProductosController(ILogger<ProductosController> logger, IProductRepository productRepo, IMapper mapper)
         {
             _logger = logger;
-            _db = db;
+            _productRepo = productRepo;
             _mapper = mapper;
         }
         //Entity Framework Core Modelos de Base de Datos
@@ -38,9 +45,18 @@ namespace WebAPIProducto.Controllers
         public async Task<ActionResult<IEnumerable<ProductoDto>>> GetProducto()
         {
             _logger.LogInformation("Obtener las villas");
-            //Mapper realiza una consulta a la base de datos para obtener una lista de productos
-            //y luego los convierte en objetos de tipo ProductoDto antes de devolverlos como respuesta HTTP en formato JSON.
-            IEnumerable<Producto> productList = await _db.Productos.ToListAsync();
+
+            /* Recuperar todos los objetos `Producto` de la base de datos y almacenarlos en una
+            colección `IEnumerable` llamada `productList`. El método `ToListAsync()` se utiliza para
+            recuperar de forma asincrónica los objetos de la base de datos.
+            IEnumerable<Producto> productList = await _db.Productos.ToListAsync(); */
+
+            /* Está recuperando todos los objetos `Producto` de la base de datos utilizando el método `GetAll()`
+            definido en la interfaz `IProductRepository`, que se implementa en otra parte del
+            código. Los objetos recuperados luego se almacenan en una colección de tipo
+            `IEnumerable<Producto>` llamada `productList`. La palabra clave `await` se utiliza para
+            recuperar de forma asíncrona los objetos de la base de datos. */
+            IEnumerable<Producto> productList = await _productRepo.GetAll();
 
             return Ok(_mapper.Map<IEnumerable<ProductoDto>>(productList));
         }
@@ -58,7 +74,12 @@ namespace WebAPIProducto.Controllers
                 return BadRequest();
             }
 
-            var producto = await _db.Productos.FindAsync(id);
+            /* Usa el objeto `_productRepo` para llamar al método `Get`, que toma
+            una expresión lambda como parámetro para filtrar los resultados. En este caso, está
+            filtrando los resultados para encontrar un objeto `Producto` con una propiedad `id` que
+            coincida con el parámetro `id` pasado al método. El resultado se almacena luego en la
+            variable `producto`. */
+            var producto = await _productRepo.Get(v => v.id == id);
 
             if (producto == null)
             {
@@ -80,8 +101,13 @@ namespace WebAPIProducto.Controllers
             {
                 return BadRequest();
             }
-            //Validaciones Personalizadas
-            if (await _db.Productos.FirstOrDefaultAsync(v => v.nameProduct.ToLower() == productPost.nameProduct.ToLower()) != null)
+
+            /* Este bloque de código está comprobando si ya existe un producto en la base de datos con
+            el mismo nombre que el que se está creando. Si lo hay, agrega un error de estado del
+            modelo con la clave "NombreExiste" y el mensaje "El nombre ya existe" y devuelve una
+            solicitud incorrecta con el estado del modelo. Esta es una validación personalizada para
+            garantizar que no haya nombres de productos duplicados en la base de datos. */
+            if (await _productRepo.Get(v => v.nameProduct.ToLower() == productPost.nameProduct.ToLower()) != null)
             {
                 ModelState.AddModelError("NombreExiste", "El nombre ya existe");
                 return BadRequest(ModelState);
@@ -102,11 +128,12 @@ namespace WebAPIProducto.Controllers
             //     active = producto.active
             // };
 
-            //Mapper
+            /* Esta línea de código usa AutoMapper para mapear las propiedades de un objeto
+            `ProductoCreate` (`productPost`) a un objeto `Producto` (`modelo`). Esto permite una
+            fácil conversión entre diferentes tipos de objetos con propiedades similares. */
             Producto modelo = _mapper.Map<Producto>(productPost);
 
-            await _db.AddAsync(modelo);
-            await _db.SaveChangesAsync();
+            await _productRepo.Create(modelo);
 
             return new CreatedAtRouteResult("GetProducto", new { id = modelo.id }, modelo);
         }
@@ -134,11 +161,9 @@ namespace WebAPIProducto.Controllers
             //Mapper
             Producto modelo = _mapper.Map<Producto>(productPut);
 
-            //se le informa que el objeto producto ha sido modificado
-            _db.Entry(modelo).State = EntityState.Modified;
-            await _db.SaveChangesAsync();
+            await _productRepo.Update(modelo);
 
-            return Ok();
+            return Ok(modelo);
         }
 
         //Endpoint de actualizar por partes, solo una propiedad
@@ -153,8 +178,9 @@ namespace WebAPIProducto.Controllers
             {
                 return BadRequest();
             }
-            //var villa = VillaStoreClass.villaList.FirstOrDefault(v => v.Id == id);
-            var product = await _db.Productos.AsNoTracking().FirstOrDefaultAsync(v => v.id == id);
+
+
+            var product = await _productRepo.Get(v => v.id == id, tracked: false);
 
             ProductoUpdate modelo = _mapper.Map<ProductoUpdate>(product);
             // ProductoUpdate modelo = new()
@@ -177,7 +203,6 @@ namespace WebAPIProducto.Controllers
 
             Producto model = _mapper.Map<Producto>(modelo);
 
-            
             // Producto model = new()
             // {
             //     id = modelo.id,
@@ -188,28 +213,27 @@ namespace WebAPIProducto.Controllers
             // };
 
             //se le informa que el objeto producto ha sido modificado
-            _db.Entry(model).State = EntityState.Modified;
-            await _db.SaveChangesAsync();
+            await _productRepo.Update(model);
 
-            return Ok();
+            return Ok(model);
         }
 
         //Endpoint Eliminar
         [HttpDelete("{id:int}", Name = "DeleteProducto")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<Producto>> DeleteProducto(int id)
         {
-            var producto = await _db.Productos.FindAsync(id);
+            var producto = await _productRepo.Get(v => v.id == id);
 
             if (producto == null)
             {
                 return NotFound();
             }
 
-            _db.Remove(producto);
-            await _db.SaveChangesAsync();
+            await _productRepo.Remove(producto);
 
-            return producto;
+            return Ok(producto);
         }
     }
 }

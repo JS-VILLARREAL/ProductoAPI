@@ -8,6 +8,8 @@ using WebAPIProducto.Models.Dto;
 
 namespace WebAPIProducto
 {
+    /* La clase mappingConfig crea mapeos entre diferentes tipos de objetos Producto y sus DTO
+    correspondientes y modelos de actualización/creación. */
     public class mappingConfig : Profile
     {
         public mappingConfig()
