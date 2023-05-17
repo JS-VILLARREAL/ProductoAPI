@@ -16,25 +16,18 @@ namespace WebAPIProducto.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ProductosController : ControllerBase
+    public class ProvidersController : ControllerBase
     {
         //Inyección de Dependencias
-        private readonly ILogger<ProductosController> _logger;
-
-        // private readonly DataContext _db;
-        private readonly IProductRepository _productRepo;
+        private readonly ILogger<ProvidersController> _logger;
+        private readonly IProviderRepository _providerRepo;
         private readonly IMapper _mapper;
-
-        /* Declarar un campo privado `_response` de tipo `APIResponse`. Este campo se utiliza para
-        almacenar y devolver información sobre la respuesta de la API, como códigos de estado y
-        mensajes de error. Se inicializa en el constructor de la clase `ProductosController`. */
         private APIResponse _response;
 
-        /* Es responsable de inicializar los campos privados `_logger`, `_productRepo`, `_mapper` y `_response` con las dependencias correspondientes inyectadas a través del constructor.*/
-        public ProductosController(ILogger<ProductosController> logger, IProductRepository productRepo, IMapper mapper)
+        public ProvidersController(ILogger<ProvidersController> logger, IProviderRepository providerRepo, IMapper mapper)
         {
             _logger = logger;
-            _productRepo = productRepo;
+            _providerRepo = providerRepo;
             _mapper = mapper;
 
             /* Está creando una nueva instancia de la clase `APIResponse` y asignándola al campo `_response`.
@@ -48,13 +41,13 @@ namespace WebAPIProducto.Controllers
         de utilizar querys con sintasix complejas*/
 
         //Endpoint de consultar todo
-        [HttpGet(Name = "GetProducto")]
+        [HttpGet(Name = "GetProvider")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetProducto()
+        public async Task<ActionResult<APIResponse>> GetProvider()
         {
             try
             {
-                _logger.LogInformation("Obtener los productos");
+                _logger.LogInformation("Obtener los proveedores");
 
                 /* Recuperar todos los objetos `Producto` de la base de datos y almacenarlos en una
                 colección `IEnumerable` llamada `productList`. El método `ToListAsync()` se utiliza para
@@ -66,9 +59,9 @@ namespace WebAPIProducto.Controllers
                 código. Los objetos recuperados luego se almacenan en una colección de tipo
                 `IEnumerable<Producto>` llamada `productList`. La palabra clave `await` se utiliza para
                 recuperar de forma asíncrona los objetos de la base de datos. */
-                IEnumerable<Producto> productList = await _productRepo.GetAll();
+                IEnumerable<ProvidersProduct> providerList = await _providerRepo.GetAll();
 
-                _response.Results = _mapper.Map<IEnumerable<ProductoDto>>(productList);
+                _response.Results = _mapper.Map<IEnumerable<ProvidersDto>>(providerList);
                 _response.statusCode = HttpStatusCode.OK;
 
                 return Ok(_response);
@@ -84,17 +77,17 @@ namespace WebAPIProducto.Controllers
         }
 
         //Endpoint de consultar por id
-        [HttpGet("{id:int}", Name = "GetProductoId")]
+        [HttpGet("{id:int}", Name = "GetProviderId")]
         //Documentations Code Status - Documentación de codigo de estado
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<APIResponse>> GetProductoId(int id)
+        public async Task<ActionResult<APIResponse>> GetProviderId(int id)
         {
             try
             {
                 if (id == 0)
                 {
-                    _logger.LogError("Error al traer producto con Id " + id);
+                    _logger.LogError("Error al traer proveedor con Id " + id);
                     _response.statusCode = HttpStatusCode.NotFound;
                     return NotFound(_response);
                 }
@@ -104,15 +97,15 @@ namespace WebAPIProducto.Controllers
                 filtrando los resultados para encontrar un objeto `Producto` con una propiedad `id` que
                 coincida con el parámetro `id` pasado al método. El resultado se almacena luego en la
                 variable `producto`. */
-                var producto = await _productRepo.Get(v => v.id == id);
+                var provider = await _providerRepo.Get(v => v.idProvider == id);
 
-                if (producto == null)
+                if (provider == null)
                 {
                     _response.statusCode = HttpStatusCode.NotFound;
                     return NotFound(_response);
                 }
 
-                _response.Results = _mapper.Map<ProductoDto>(producto);
+                _response.Results = _mapper.Map<ProvidersDto>(provider);
                 _response.IsSuccessful = true;
                 _response.statusCode = HttpStatusCode.OK;
 
@@ -127,11 +120,11 @@ namespace WebAPIProducto.Controllers
         }
 
         //Endpoint de crear
-        [HttpPost(Name = "PostProducto")]
+        [HttpPost(Name = "PostProvider")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<APIResponse>> PostProducto(ProductoCreate productPost)
+        public async Task<ActionResult<APIResponse>> PostProvider(ProvidersCreate providerPost)
         {
             try
             {
@@ -147,15 +140,15 @@ namespace WebAPIProducto.Controllers
                 modelo con la clave "NombreExiste" y el mensaje "El nombre ya existe" y devuelve una
                 solicitud incorrecta con el estado del modelo. Esta es una validación personalizada para
                 garantizar que no haya nombres de productos duplicados en la base de datos. */
-                if (await _productRepo.Get(v => v.nameProduct.ToLower() == productPost.nameProduct.ToLower()) != null)
+                if (await _providerRepo.Get(v => v.nameProvider.ToLower() == providerPost.nameProvider.ToLower()) != null)
                 {
                     ModelState.AddModelError("NombreExiste", "El nombre ya existe");
                     return BadRequest(ModelState);
                 }
 
-                if (productPost == null)
+                if (providerPost == null)
                 {
-                    return BadRequest(productPost);
+                    return BadRequest(providerPost);
                 }
 
                 //Antes se utilizo esto
@@ -171,14 +164,14 @@ namespace WebAPIProducto.Controllers
                 /* Esta línea de código usa AutoMapper para mapear las propiedades de un objeto
                 `ProductoCreate` (`productPost`) a un objeto `Producto` (`modelo`). Esto permite una
                 fácil conversión entre diferentes tipos de objetos con propiedades similares. */
-                Producto modelo = _mapper.Map<Producto>(productPost);
+                ProvidersProduct modelo = _mapper.Map<ProvidersProduct>(providerPost);
 
-                await _productRepo.Create(modelo);
+                await _providerRepo.Create(modelo);
 
                 _response.Results = modelo;
                 _response.statusCode = HttpStatusCode.Created;
 
-                return CreatedAtRoute("GetProducto", new { id = modelo.id }, _response);
+                return CreatedAtRoute("GetProvider", new { id = modelo.idProvider }, _response);
             }
             catch (Exception ex)
             {
@@ -190,14 +183,14 @@ namespace WebAPIProducto.Controllers
         }
 
         //Endpoint actualizar
-        [HttpPut("{id:int}", Name = "PutProducto")]
+        [HttpPut("{id:int}", Name = "PutProvider")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> PutProducto(int id, [FromBody] ProductoUpdate productPut)
+        public async Task<ActionResult<APIResponse>> PutProvider(int id, [FromBody] ProvidersUpdate providerPut)
         {
             try
             {
-                if (productPut == null || id != productPut.id)
+                if (providerPut == null || id != providerPut.idProvider)
                 {
                     _response.IsSuccessful = false;
                     _response.statusCode = HttpStatusCode.BadRequest;
@@ -214,9 +207,9 @@ namespace WebAPIProducto.Controllers
                 // };
 
                 //Mapper
-                Producto modelo = _mapper.Map<Producto>(productPut);
+                ProvidersProduct modelo = _mapper.Map<ProvidersProduct>(providerPut);
 
-                await _productRepo.Update(modelo);
+                await _providerRepo.Update(modelo);
 
                 _response.Results = modelo;
                 _response.statusCode = HttpStatusCode.OK;
@@ -232,13 +225,13 @@ namespace WebAPIProducto.Controllers
         }
 
         //Endpoint de actualizar por partes, solo una propiedad
-        [HttpPatch("{id:int}", Name = "PatchProducto")]
+        [HttpPatch("{id:int}", Name = "PatchProvider")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> PatchProducto(int id, JsonPatchDocument<ProductoUpdate> productPatch)
+        public async Task<IActionResult> PatchProvider(int id, JsonPatchDocument<ProvidersUpdate> providerPatch)
         {
-            if (productPatch == null || id == 0)
+            if (providerPatch == null || id == 0)
             {
                 _response.IsSuccessful = false;
                 _response.statusCode = HttpStatusCode.BadRequest;
@@ -246,9 +239,9 @@ namespace WebAPIProducto.Controllers
             }
 
 
-            var product = await _productRepo.Get(v => v.id == id, tracked: false);
+            var provider = await _providerRepo.Get(v => v.idProvider == id, tracked: false);
 
-            ProductoUpdate modelo = _mapper.Map<ProductoUpdate>(product);
+            ProvidersUpdate modelo = _mapper.Map<ProvidersUpdate>(provider);
             // ProductoUpdate modelo = new()
             // {
             //     id = product.id,
@@ -258,16 +251,16 @@ namespace WebAPIProducto.Controllers
             //     active = product.active
             // };
 
-            if (product == null) return BadRequest();
+            if (provider == null) return BadRequest();
 
-            productPatch.ApplyTo(modelo, ModelState);
+            providerPatch.ApplyTo(modelo, ModelState);
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            Producto model = _mapper.Map<Producto>(modelo);
+            ProvidersProduct model = _mapper.Map<ProvidersProduct>(modelo);
 
             // Producto model = new()
             // {
@@ -279,7 +272,7 @@ namespace WebAPIProducto.Controllers
             // };
 
             //se le informa que el objeto producto ha sido modificado
-            await _productRepo.Update(model);
+            await _providerRepo.Update(model);
 
             _response.Results = model;
             _response.IsSuccessful = true;
@@ -289,22 +282,22 @@ namespace WebAPIProducto.Controllers
         }
 
         //Endpoint Eliminar
-        [HttpDelete("{id:int}", Name = "DeleteProducto")]
+        [HttpDelete("{id:int}", Name = "DeleteProvider")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<APIResponse>> DeleteProducto(int id)
+        public async Task<ActionResult<APIResponse>> DeleteProvider(int id)
         {
             try
             {
-                var producto = await _productRepo.Get(v => v.id == id);
+                var provider = await _providerRepo.Get(v => v.idProvider == id);
 
-                if (producto == null)
+                if (provider == null)
                 {
                     _response.statusCode = HttpStatusCode.NotFound;
                     return NotFound(_response);
                 }
 
-                await _productRepo.Remove(producto);
+                await _providerRepo.Remove(provider);
 
                 _response.statusCode = HttpStatusCode.OK;
 

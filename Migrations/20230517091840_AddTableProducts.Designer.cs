@@ -12,8 +12,8 @@ using WebAPIProducto.Data;
 namespace WebAPIProducto.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230514052102_MigracionInical")]
-    partial class MigracionInical
+    [Migration("20230517091840_AddTableProducts")]
+    partial class AddTableProducts
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,10 +28,7 @@ namespace WebAPIProducto.Migrations
             modelBuilder.Entity("WebAPIProducto.Models.Producto", b =>
                 {
                     b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
 
                     b.Property<bool>("active")
                         .HasColumnType("bit");
@@ -51,6 +48,45 @@ namespace WebAPIProducto.Migrations
                     b.HasKey("id");
 
                     b.ToTable("Productos");
+                });
+
+            modelBuilder.Entity("WebAPIProducto.Models.ProvidersProduct", b =>
+                {
+                    b.Property<int>("idProvider")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("idProvider"));
+
+                    b.Property<string>("address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("dateRegister")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("nameProvider")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("priceProduct")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("idProvider");
+
+                    b.ToTable("Providers");
+                });
+
+            modelBuilder.Entity("WebAPIProducto.Models.Producto", b =>
+                {
+                    b.HasOne("WebAPIProducto.Models.ProvidersProduct", "ProvidersProduct")
+                        .WithMany()
+                        .HasForeignKey("id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProvidersProduct");
                 });
 #pragma warning restore 612, 618
         }

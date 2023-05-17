@@ -19,6 +19,10 @@ namespace WebAPIProducto
 
             CreateMap<Producto, ProductoCreate>().ReverseMap();
             CreateMap<Producto, ProductoUpdate>().ReverseMap();
+
+            CreateMap<ProvidersProduct, ProvidersDto>().ReverseMap();
+            CreateMap<ProvidersProduct, ProvidersCreate>().ReverseMap();
+            CreateMap<ProvidersProduct, ProvidersUpdate>().ReverseMap();
         }
     }
 }

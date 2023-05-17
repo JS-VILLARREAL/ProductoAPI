@@ -9,5 +9,7 @@ namespace WebAPIProducto.Data
         {
         }
         public DbSet<Producto> Productos { get; set; }
+
+        public DbSet<ProvidersProduct> Providers {get; set; }
     }
 }

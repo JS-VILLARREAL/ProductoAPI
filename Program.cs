@@ -38,6 +38,8 @@ tiempo de vida de `Scoped` especifica que se creará una nueva instancia de `Pro
 cada solicitud HTTP. */
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
+builder.Services.AddScoped<IProviderRepository, ProviderRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
