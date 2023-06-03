@@ -9,8 +9,9 @@ namespace WebAPIProducto.Models
     public class Producto
     {
         [Key]
-        public int id { get; set; }
-        [ForeignKey("id")]
+        [Required]
+        public int idProduct { get; set; }
+        [ForeignKey("idProduct")]
         public ProvidersProduct ProvidersProduct { get; set; }
         public string? nameProduct { get; set; }
         public string? description { get; set; }

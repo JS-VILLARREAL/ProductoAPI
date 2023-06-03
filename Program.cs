@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DataContext>(
     option => option.UseSqlite(connectionString)
 );*/
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddControllers().AddNewtonsoftJson();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -24,6 +25,15 @@ conexión se recupera del archivo de configuración usando la clave "DefaultConn
 builder.Services.AddDbContext<DataContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:8080/").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                      });
 });
 
 /*` agrega AutoMapper al contenedor de inyección de dependencia.
@@ -48,6 +58,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseHttpsRedirection();
 

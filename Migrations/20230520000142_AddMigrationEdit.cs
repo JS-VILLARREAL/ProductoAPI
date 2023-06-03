@@ -5,7 +5,7 @@
 namespace WebAPIProducto.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTableProducts : Migration
+    public partial class AddMigrationEdit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

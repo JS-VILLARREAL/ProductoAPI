@@ -12,8 +12,8 @@ using WebAPIProducto.Data;
 namespace WebAPIProducto.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230517091840_AddTableProducts")]
-    partial class AddTableProducts
+    [Migration("20230520000142_AddMigrationEdit")]
+    partial class AddMigrationEdit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,7 +27,7 @@ namespace WebAPIProducto.Migrations
 
             modelBuilder.Entity("WebAPIProducto.Models.Producto", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<int>("idProduct")
                         .HasColumnType("int");
 
                     b.Property<bool>("active")
@@ -45,7 +45,7 @@ namespace WebAPIProducto.Migrations
                     b.Property<decimal>("price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("id");
+                    b.HasKey("idProduct");
 
                     b.ToTable("Productos");
                 });
@@ -82,7 +82,7 @@ namespace WebAPIProducto.Migrations
                 {
                     b.HasOne("WebAPIProducto.Models.ProvidersProduct", "ProvidersProduct")
                         .WithMany()
-                        .HasForeignKey("id")
+                        .HasForeignKey("idProduct")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

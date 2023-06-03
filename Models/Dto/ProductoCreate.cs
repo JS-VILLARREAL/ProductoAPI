@@ -11,6 +11,8 @@ namespace WebAPIProducto.Models.Dto
     public class ProductoCreate
     {
         [Required]
+        public int idProduct { get; set; }
+        [Required]
         [MaxLength(40)]
         public string? nameProduct { get; set; }
         public string? description { get; set; }

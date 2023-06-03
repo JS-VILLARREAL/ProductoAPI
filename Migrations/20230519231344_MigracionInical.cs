@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebAPIProducto.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTableProviders : Migration
+    public partial class MigracionInical : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,7 +32,7 @@ namespace WebAPIProducto.Migrations
                 name: "Productos",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false),
+                    idProduct = table.Column<int>(type: "int", nullable: false),
                     nameProduct = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
@@ -41,10 +41,10 @@ namespace WebAPIProducto.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Productos", x => x.id);
+                    table.PrimaryKey("PK_Productos", x => x.idProduct);
                     table.ForeignKey(
-                        name: "FK_Productos_Providers_id",
-                        column: x => x.id,
+                        name: "FK_Productos_Providers_idProduct",
+                        column: x => x.idProduct,
                         principalTable: "Providers",
                         principalColumn: "idProvider",
                         onDelete: ReferentialAction.Cascade);

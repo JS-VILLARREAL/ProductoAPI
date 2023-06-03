@@ -24,7 +24,7 @@ namespace WebAPIProducto.Migrations
 
             modelBuilder.Entity("WebAPIProducto.Models.Producto", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<int>("idProduct")
                         .HasColumnType("int");
 
                     b.Property<bool>("active")
@@ -42,7 +42,7 @@ namespace WebAPIProducto.Migrations
                     b.Property<decimal>("price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("id");
+                    b.HasKey("idProduct");
 
                     b.ToTable("Productos");
                 });
@@ -79,7 +79,7 @@ namespace WebAPIProducto.Migrations
                 {
                     b.HasOne("WebAPIProducto.Models.ProvidersProduct", "ProvidersProduct")
                         .WithMany()
-                        .HasForeignKey("id")
+                        .HasForeignKey("idProduct")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

@@ -104,7 +104,7 @@ namespace WebAPIProducto.Controllers
                 filtrando los resultados para encontrar un objeto `Producto` con una propiedad `id` que
                 coincida con el parámetro `id` pasado al método. El resultado se almacena luego en la
                 variable `producto`. */
-                var producto = await _productRepo.Get(v => v.id == id);
+                var producto = await _productRepo.Get(v => v.idProduct == id);
 
                 if (producto == null)
                 {
@@ -178,7 +178,7 @@ namespace WebAPIProducto.Controllers
                 _response.Results = modelo;
                 _response.statusCode = HttpStatusCode.Created;
 
-                return CreatedAtRoute("GetProducto", new { id = modelo.id }, _response);
+                return CreatedAtRoute("GetProducto", new { id = modelo.idProduct }, _response);
             }
             catch (Exception ex)
             {
@@ -197,7 +197,7 @@ namespace WebAPIProducto.Controllers
         {
             try
             {
-                if (productPut == null || id != productPut.id)
+                if (productPut == null || id != productPut.idProduct)
                 {
                     _response.IsSuccessful = false;
                     _response.statusCode = HttpStatusCode.BadRequest;
@@ -246,7 +246,7 @@ namespace WebAPIProducto.Controllers
             }
 
 
-            var product = await _productRepo.Get(v => v.id == id, tracked: false);
+            var product = await _productRepo.Get(v => v.idProduct == id, tracked: false);
 
             ProductoUpdate modelo = _mapper.Map<ProductoUpdate>(product);
             // ProductoUpdate modelo = new()
@@ -296,7 +296,7 @@ namespace WebAPIProducto.Controllers
         {
             try
             {
-                var producto = await _productRepo.Get(v => v.id == id);
+                var producto = await _productRepo.Get(v => v.idProduct == id);
 
                 if (producto == null)
                 {

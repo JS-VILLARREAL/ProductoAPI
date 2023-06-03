@@ -9,7 +9,7 @@ namespace WebAPIProducto.Models.Dto
     public class ProductoUpdate
     {
         [Required]
-        public int id { get; set; }
+        public int idProduct { get; set; }
         [Required]
         [MaxLength(40)]
         public string? nameProduct { get; set; }
